@@ -1,0 +1,92 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum SubscriptionPlan {
+  FREE
+  STARTER
+  PRO
+  PREMIUM_ADVISORY
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  INACTIVE
+  CANCELED
+  TRIAL
+}
+
+model User {
+  id            String         @id @default(cuid())
+  name          String
+  email         String         @unique
+  googleId      String         @unique
+  role          String         @default("USER")
+  businesses    Business[]
+  subscriptions Subscription[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+model Business {
+  id                     String    @id @default(cuid())
+  userId                 String
+  companyName            String
+  industry               String
+  location               String
+  yearsInOperation       Int
+  annualTurnover         Float
+  netProfitMargin        Float
+  fundingRequirement     Float
+  collateralAvailability Boolean
+  gstStatus              Boolean
+  debtExposure           Float     @default(0)
+  user                   User      @relation(fields: [userId], references: [id])
+  reports                Report[]
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+}
+
+model Report {
+  id                        String   @id @default(cuid())
+  businessId                String
+  companyOverview           String
+  fundingScore              Int
+  riskLevel                 String
+  loanEligibilityEstimate   String
+  governmentSchemes         Json
+  subsidyOpportunities      Json
+  creditRiskFlags           Json
+  fundingRoadmap            Json
+  aiResearch                Json
+  business                  Business @relation(fields: [businessId], references: [id])
+  createdAt                 DateTime @default(now())
+}
+
+model Scheme {
+  id                 String   @id @default(cuid())
+  schemeName         String
+  eligibleIndustry   String
+  eligibleTurnover   Float
+  subsidyType        String
+  benefits           String
+  applicationProcess String
+  createdAt          DateTime @default(now())
+}
+
+model Subscription {
+  id                String             @id @default(cuid())
+  userId            String
+  plan              SubscriptionPlan
+  status            SubscriptionStatus
+  razorpayOrderId   String?
+  razorpayPaymentId String?
+  user              User               @relation(fields: [userId], references: [id])
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+}
